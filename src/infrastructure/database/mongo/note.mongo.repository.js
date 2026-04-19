@@ -1,3 +1,5 @@
+import NoteModel from "./note.model.js";
+
 export default class NoteMongoRepository {
     async save(noteEntity) {
         const note = new NoteModel({
@@ -13,7 +15,6 @@ export default class NoteMongoRepository {
     }
 
     async findByUserId(userId) {
-        return await noteModel.find({ userId });
+        return await NoteModel.find({ userId });
     }
 }
- 

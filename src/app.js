@@ -4,6 +4,9 @@ import cors from 'cors';
 import morgan from 'morgan';
 import 'express-async-errors';
 
+import { connectMongo } from './infrastructure/database/mongo/connection.js';
+import noteRouter from './presentation/routes/note.router.js';
+
 const app = express();
 
 app.use(cors());
@@ -19,6 +22,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api', noteRouter);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Error interno del servidor' });
@@ -26,6 +31,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+connectMongo().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+  });
 });

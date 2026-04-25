@@ -17,4 +17,16 @@ export default class NoteMongoRepository {
     async findByUserId(userId) {
         return await NoteModel.find({ userId });
     }
+
+    async findById(id) {
+        return await NoteModel.findById(id);
+    }
+
+    async update(id, data) {
+        return await NoteModel.findByIdAndUpdate(id, data, { new: true });
+    }
+
+    async delete(id) {
+        return await NoteModel.findByIdAndDelete(id);
+    }
 }

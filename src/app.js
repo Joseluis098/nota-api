@@ -6,6 +6,7 @@ import 'express-async-errors';
 
 import { connectMongo } from './infrastructure/database/mongo/connection.js';
 import noteRouter from './presentation/routes/note.router.js';
+import authRouter from './presentation/routes/auth.router.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api', authRouter);
 app.use('/api', noteRouter);
 
 app.use((err, req, res, next) => {

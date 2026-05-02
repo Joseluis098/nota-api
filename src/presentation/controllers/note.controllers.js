@@ -21,7 +21,7 @@ export default class NoteController {
             const notes = await this.noteService.getNotesByUserId(userId);
             res.status(200).json(notes);
         } catch (error) {
-            res.status(404).json({ error: error.message });
+            res.status(500).json({ error: error.message });
         }
     }
 
@@ -32,7 +32,7 @@ export default class NoteController {
             if (!note) return res.status(404).json({ error: "Note not found" });
             res.status(200).json(note);
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(500).json({ error: error.message });
         }
     }
 
@@ -54,9 +54,9 @@ export default class NoteController {
         try {
             const note = await this.noteService.deleteNote(id);
             if (!note) return res.status(404).json({ error: "Note not found" });
-            res.status(200).json({ message: "Note deleted successfully", id });
+            res.status(204).send();
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(500).json({ error: error.message });
         }
     }
 }

@@ -7,6 +7,7 @@ import 'express-async-errors';
 import { connectMongo } from './infrastructure/database/mongo/connection.js';
 import { setupSwagger } from './infrastructure/config/swagger.config.js';
 import noteRouter from './presentation/routes/note.router.js';
+import categoryRouter from './presentation/routes/category.router.js';
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 app.use('/api/v1', noteRouter);
+app.use('/api/v1', categoryRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Recurso no encontrado' });

@@ -25,6 +25,10 @@ const options = {
         description: 'Operaciones CRUD sobre notas personales',
       },
       {
+        name: 'Categories',
+        description: 'Categorías para organizar las notas',
+      },
+      {
         name: 'Health',
         description: 'Verificación del estado del servicio',
       },
@@ -68,6 +72,17 @@ const options = {
               description: 'Identificador del usuario propietario',
               example: 'user_123',
             },
+            categoryId: {
+              type: 'string',
+              nullable: true,
+              description: 'Identificador (o documento populado) de la categoría asociada',
+              example: '6635a2b3c4d5e6f7a8b9c0d1',
+            },
+            isPrivate: {
+              type: 'boolean',
+              description: 'Si es true, no se puede acceder vía /notes/:id/public',
+              example: false,
+            },
             createdAt: {
               type: 'string',
               format: 'date-time',
@@ -90,6 +105,17 @@ const options = {
               type: 'string',
               example: 'Contenido de la nota',
             },
+            isPrivate: {
+              type: 'boolean',
+              example: false,
+              description: 'Si es true, la nota no podrá verse en /notes/:id/public',
+            },
+            categoryId: {
+              type: 'string',
+              nullable: true,
+              description: 'Identificador opcional de la categoría asociada',
+              example: '6634c1e5d2a1b9f8e7c1a234',
+            },
             image: {
               type: 'string',
               format: 'binary',
@@ -102,10 +128,55 @@ const options = {
           properties: {
             title: { type: 'string', example: 'Título actualizado' },
             content: { type: 'string', example: 'Contenido actualizado' },
+            isPrivate: { type: 'boolean', example: true },
+            categoryId: { type: 'string', nullable: true },
             image: {
               type: 'string',
               format: 'binary',
               description: 'Nueva imagen (opcional)',
+            },
+          },
+        },
+        Category: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Identificador único de la categoría',
+              example: '6635a2b3c4d5e6f7a8b9c0d1',
+            },
+            name: {
+              type: 'string',
+              description: 'Nombre de la categoría',
+              example: 'Trabajo',
+            },
+            color: {
+              type: 'string',
+              description: 'Color asociado en formato hex',
+              example: '#e74c3c',
+            },
+            userId: {
+              type: 'string',
+              description: 'Identificador del usuario propietario',
+              example: 'user_123',
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        CategoryInput: {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Nombre de la categoría',
+              example: 'Trabajo',
+            },
+            color: {
+              type: 'string',
+              description: 'Color en formato hex (opcional, default #3498db)',
+              example: '#e74c3c',
             },
           },
         },

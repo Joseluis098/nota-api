@@ -3,6 +3,7 @@ import multer from "multer";
 import NoteController from "../controllers/note.controllers.js";
 import NoteService from "../../application/application/use-cases/note.service.js";
 import NoteMongoRepository from "../../infrastructure/database/mongo/note.mongo.repository.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 // import NoteMySQLRepository from "../../infrastructure/database/mysql/note.mysql.repostory.js";
 
 const upload = multer({ dest: "uploads/" });
@@ -14,13 +15,60 @@ const noteController = new NoteController(noteService);
 
 const router = Router();
 
+// =====================================================================
+//  RUTA PÚBLICA — debe registrarse ANTES que /notes/:id para que Express
+//  matchee primero la ruta más específica. NO usa authMiddleware.
+// =====================================================================
+
+/**
+ * @swagger
+ * /notes/{id}/public:
+ *   get:
+ *     summary: Obtener una nota pública (sin autenticación)
+ *     description: Permite ver una nota sin token JWT. Si la nota es privada (isPrivate=true), retorna 403.
+ *     tags: [Notes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Identificador único de la nota
+ *     responses:
+ *       200:
+ *         description: Nota pública
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Note'
+ *       403:
+ *         description: La nota es privada y no puede ser vista públicamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Nota no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/notes/:id/public", noteController.getPublicNote);
+
+// =====================================================================
+//  RUTAS PROTEGIDAS — todas requieren authMiddleware (header Bearer).
+// =====================================================================
+
 /**
  * @swagger
  * /notes:
  *   post:
- *     summary: Crear una nueva nota
- *     description: Crea una nota asociada al usuario autenticado. Acepta una imagen opcional.
+ *     summary: Crear una nueva nota (requiere token)
+ *     description: Crea una nota asociada al usuario autenticado. Acepta imagen opcional y categoryId opcional.
  *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -35,26 +83,26 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Note'
  *       400:
- *         description: Datos inválidos (title o content faltantes)
+ *         description: Datos inválidos
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Token no proveído o inválido
  *       500:
  *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.post("/notes", upload.single("image"), noteController.createNote);
+router.post("/notes", authMiddleware, upload.single("image"), noteController.createNote);
 
 /**
  * @swagger
  * /notes:
  *   get:
- *     summary: Obtener todas las notas del usuario autenticado
+ *     summary: Listar notas del usuario autenticado
  *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Listado de notas
@@ -64,28 +112,27 @@ router.post("/notes", upload.single("image"), noteController.createNote);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: Token no proveído o inválido
  *       500:
  *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get("/notes", noteController.getNotesByUserId);
+router.get("/notes", authMiddleware, noteController.getNotesByUserId);
 
 /**
  * @swagger
  * /notes/{id}:
  *   get:
- *     summary: Obtener una nota por su identificador
+ *     summary: Obtener una nota por id (requiere token)
  *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Identificador único de la nota
  *     responses:
  *       200:
  *         description: Nota encontrada
@@ -93,35 +140,27 @@ router.get("/notes", noteController.getNotesByUserId);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: Token no proveído o inválido
  *       404:
  *         description: Nota no encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get("/notes/:id", noteController.getNoteById);
+router.get("/notes/:id", authMiddleware, noteController.getNoteById);
 
 /**
  * @swagger
  * /notes/{id}:
  *   put:
- *     summary: Actualizar una nota existente
- *     description: Reemplaza los campos enviados. Acepta nueva imagen opcional.
+ *     summary: Actualizar una nota (requiere token)
  *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Identificador único de la nota
  *     requestBody:
  *       required: true
  *       content:
@@ -137,54 +176,35 @@ router.get("/notes/:id", noteController.getNoteById);
  *               $ref: '#/components/schemas/Note'
  *       400:
  *         description: Datos inválidos
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Token no proveído o inválido
  *       404:
  *         description: Nota no encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.put("/notes/:id", upload.single("image"), noteController.updateNote);
+router.put("/notes/:id", authMiddleware, upload.single("image"), noteController.updateNote);
 
 /**
  * @swagger
  * /notes/{id}:
  *   delete:
- *     summary: Eliminar una nota por su identificador
+ *     summary: Eliminar una nota (requiere token)
  *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Identificador único de la nota
  *     responses:
  *       204:
- *         description: Nota eliminada (sin contenido en la respuesta)
+ *         description: Nota eliminada
+ *       401:
+ *         description: Token no proveído o inválido
  *       404:
  *         description: Nota no encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.delete("/notes/:id", noteController.deleteNote);
+router.delete("/notes/:id", authMiddleware, noteController.deleteNote);
 
 export default router;

@@ -21,6 +21,20 @@ export default class NoteService {
         return await this.noteRepository.findById(id);
     }
 
+    /**
+     * Obtiene una nota como pública (sin auth).
+     * Devuelve un objeto con shape: { found, isPrivate, note }.
+     * - found=false  → la nota no existe.
+     * - isPrivate=true → la nota es privada (no debe servirse públicamente).
+     * - Caso ok      → note contiene la nota a devolver.
+     */
+    async getPublicNote(id) {
+        const note = await this.noteRepository.findById(id);
+        if (!note) return { found: false };
+        if (note.isPrivate) return { found: true, isPrivate: true };
+        return { found: true, isPrivate: false, note };
+    }
+
     async updateNote(id, data) {
         if (!data.title && !data.content && !data.imageUrl) {
             throw new Error("At least one field must be provided");

@@ -24,4 +24,10 @@ Thumbs.db
 # Project specific
 uploads/*
 !uploads/.gitkeep
- 
+
+# Apuntes personales (no compartir)
+apuntes/
+
+# Contexto local de Claude (no compartir)
+CLAUDE.local.md
+.claude/
